@@ -1,0 +1,10 @@
+{
+    "C_Cpp.default.includePath": [
+        "~/ffmpeg_sources/ffmpeg"
+    ],
+    "files.associations": {
+        "type_traits": "cpp",
+        "chrono": "cpp",
+        "opt.h": "c"
+    }
+}
