@@ -1,8 +1,21 @@
 # Libav Samples
 
+To build the 2 examples, you must first install FFMPEG or build it frome source. 
+
+Follow the [compilation guide](https://trac.ffmpeg.org/wiki/CompilationGuide).
+
+1- [Get the dependencies](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu#GettheDependencies)
+
+2- From you home ($HOME) directory, execute the `fetch-build-install.sh` script. For subsequent rebuilds, just run `build-install.sh`.
+
+
+When built, the artifacts should be in the `ffmpeg_build` folder.
+
 ## Hello World
 
 ### Build
+
+Make sure you properly set the location of `ffmpeg_build`.
 
 ```
 g++ -I../../ffmpeg_build/include -L../../ffmpeg_build/lib hello_world.cpp -lavcodec -lavformat -lavfilter -lavdevice -lswresample -lswscale -lavutil -lz -lx264 -lx265 -lopus -lfdk-aac -lvpx -lvorbisenc  -lvorbis  -pthread -lgnutls -lmp3lame -lX11 -lm  -lvdpau -lva -lva-drm -lva-x11 -o hello_world
@@ -11,6 +24,8 @@ g++ -I../../ffmpeg_build/include -L../../ffmpeg_build/lib hello_world.cpp -lavco
 ## Transcoding
 
 ### Build
+
+Make sure you properly set the location of `ffmpeg_build`.
 
 ```
 g++ -I../../ffmpeg_build/include -L../../ffmpeg_build/lib video_debugging.cpp transcoding.cpp -lavcodec -lavformat -lavfilter -lavdevice -lswresample -lswscale -lavutil -lz -lx264 -lx265 -lopus -lfdk-aac -lvpx -lvorbisenc  -lvorbis  -pthread -lgnutls -lmp3lame -lX11 -lm  -lvdpau -lva -lva-drm -lva-x11 -o transcoding
