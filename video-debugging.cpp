@@ -1,4 +1,4 @@
-#include "video_debugging.h"
+#include "video-debugging.h"
 
 #include <inttypes.h>
 

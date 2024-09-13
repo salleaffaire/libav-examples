@@ -13,7 +13,7 @@ extern "C" {
 #include <chrono>
 #include <iostream>
 
-#include "video_debugging.h"
+#include "video-debugging.h"
 
 typedef struct StreamingParams {
   char copy_video;
@@ -115,10 +115,8 @@ int prepare_decoder(StreamingContext* sc) {
   return 0;
 }
 
-int prepare_video_encoder(StreamingContext* sc,
-                          AVCodecContext* decoder_ctx,
-                          AVRational input_framerate,
-                          StreamingParams sp) {
+int prepare_video_encoder(StreamingContext* sc, AVCodecContext* decoder_ctx,
+                          AVRational input_framerate, StreamingParams sp) {
   sc->video_avs = avformat_new_stream(sc->avfc, NULL);
 
   sc->video_avc = (AVCodec*)avcodec_find_encoder_by_name(sp.video_codec);
@@ -169,8 +167,7 @@ int prepare_video_encoder(StreamingContext* sc,
   return 0;
 }
 
-int prepare_audio_encoder(StreamingContext* sc,
-                          int sample_rate,
+int prepare_audio_encoder(StreamingContext* sc, int sample_rate,
                           StreamingParams sp) {
   sc->audio_avs = avformat_new_stream(sc->avfc, NULL);
 
@@ -208,17 +205,14 @@ int prepare_audio_encoder(StreamingContext* sc,
   return 0;
 }
 
-int prepare_copy(AVFormatContext* avfc,
-                 AVStream** avs,
+int prepare_copy(AVFormatContext* avfc, AVStream** avs,
                  AVCodecParameters* decoder_par) {
   *avs = avformat_new_stream(avfc, NULL);
   avcodec_parameters_copy((*avs)->codecpar, decoder_par);
   return 0;
 }
 
-int remux(AVPacket** pkt,
-          AVFormatContext** avfc,
-          AVRational decoder_tb,
+int remux(AVPacket** pkt, AVFormatContext** avfc, AVRational decoder_tb,
           AVRational encoder_tb) {
   av_packet_rescale_ts(*pkt, decoder_tb, encoder_tb);
   if (av_interleaved_write_frame(*avfc, *pkt) < 0) {
@@ -228,11 +222,9 @@ int remux(AVPacket** pkt,
   return 0;
 }
 
-int encode_video(StreamingContext* decoder,
-                 StreamingContext* encoder,
+int encode_video(StreamingContext* decoder, StreamingContext* encoder,
                  AVFrame* input_frame) {
-  if (input_frame)
-    input_frame->pict_type = AV_PICTURE_TYPE_NONE;
+  if (input_frame) input_frame->pict_type = AV_PICTURE_TYPE_NONE;
 
   AVPacket* output_packet = av_packet_alloc();
   if (!output_packet) {
@@ -279,8 +271,7 @@ int encode_video(StreamingContext* decoder,
   return 0;
 }
 
-int encode_audio(StreamingContext* decoder,
-                 StreamingContext* encoder,
+int encode_audio(StreamingContext* decoder, StreamingContext* encoder,
                  AVFrame* input_frame) {
   AVPacket* output_packet = av_packet_alloc();
   if (!output_packet) {
@@ -316,10 +307,8 @@ int encode_audio(StreamingContext* decoder,
   return 0;
 }
 
-int transcode_audio(StreamingContext* decoder,
-                    StreamingContext* encoder,
-                    AVPacket* input_packet,
-                    AVFrame* input_frame) {
+int transcode_audio(StreamingContext* decoder, StreamingContext* encoder,
+                    AVPacket* input_packet, AVFrame* input_frame) {
   int response = avcodec_send_packet(decoder->audio_avcc, input_packet);
   if (response < 0) {
     logging("Error while sending packet to decoder: %s", av_err2str(response));
@@ -337,18 +326,15 @@ int transcode_audio(StreamingContext* decoder,
     }
 
     if (response >= 0) {
-      if (encode_audio(decoder, encoder, input_frame))
-        return -1;
+      if (encode_audio(decoder, encoder, input_frame)) return -1;
     }
     av_frame_unref(input_frame);
   }
   return 0;
 }
 
-int transcode_video(StreamingContext* decoder,
-                    StreamingContext* encoder,
-                    AVPacket* input_packet,
-                    AVFrame* input_frame) {
+int transcode_video(StreamingContext* decoder, StreamingContext* encoder,
+                    AVPacket* input_packet, AVFrame* input_frame) {
   int response = avcodec_send_packet(decoder->video_avcc, input_packet);
   if (response < 0) {
     logging("Error while sending packet to decoder: %s", av_err2str(response));
@@ -366,8 +352,7 @@ int transcode_video(StreamingContext* decoder,
     }
 
     if (response >= 0) {
-      if (encode_video(decoder, encoder, input_frame))
-        return -1;
+      if (encode_video(decoder, encoder, input_frame)) return -1;
     }
     av_frame_unref(input_frame);
   }
@@ -448,13 +433,10 @@ int main(int argc, char* argv[]) {
       (StreamingContext*)calloc(1, sizeof(StreamingContext));
   encoder->filename = argv[2];
 
-  if (sp.output_extension)
-    strcat(encoder->filename, sp.output_extension);
+  if (sp.output_extension) strcat(encoder->filename, sp.output_extension);
 
-  if (open_media(decoder->filename, &decoder->avfc))
-    return -1;
-  if (prepare_decoder(decoder))
-    return -1;
+  if (open_media(decoder->filename, &decoder->avfc)) return -1;
+  if (prepare_decoder(decoder)) return -1;
 
   avformat_alloc_output_context2(&encoder->avfc, NULL, NULL, encoder->filename);
   if (!encoder->avfc) {
@@ -547,8 +529,7 @@ int main(int argc, char* argv[]) {
     }
   }
   // TODO: should I also flush the audio encoder?
-  if (encode_video(decoder, encoder, NULL))
-    return -1;
+  if (encode_video(decoder, encoder, NULL)) return -1;
 
   av_write_trailer(encoder->avfc);
 

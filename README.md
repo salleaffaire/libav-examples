@@ -1,6 +1,8 @@
 # Libav Samples
 
+```note
 Built on Ununtu 22.04. 
+```
 
 To build the 2 examples, you must first install FFMPEG or build it frome source. 
 
@@ -18,14 +20,18 @@ sudo apt-get install libdav1d-dev
 sudo apt-get install libx265-dev libnuma-dev
 ```
 
-1.5 You might need to run this after installing all the needed codecs.
+1.5- You might need to run this after installing all the needed codecs.
 
 ```bash
 sudo apt-get install libunistring-dev
 ```
 see, [FFMPEG not building](https://askubuntu.com/questions/1252997/unable-to-compile-ffmpeg-on-ubuntu-20-04)
 
-2- From you home ($HOME) directory, execute the `fetch-build-install.sh` script. For subsequent rebuilds, just run `build-install.sh`.
+1.5.5-
+
+In your home folder create a `ffmpeg_sources` folder and copy `ffmpeg-snapshot.tar.bz2` into it.
+
+2- From your home ($HOME) directory, execute the `fetch-build-install.sh` script. For subsequent rebuilds, just run `build-install.sh`.
 
 
 When built, the artifacts should be in the `ffmpeg_build` folder.
@@ -45,7 +51,7 @@ g++ -I../../ffmpeg_build/include -L../../ffmpeg_build/lib hello-world.cpp -lavfo
 ### Build
 
 ```bash
-g++ -I../../ffmpeg_build/include -I./NDI_SDK/include -L ../NDI_SDK/lib/x86_64-linux-gnu -L../../ffmpeg_build/lib ndi-player.cpp -lavformat -lndi -lavcodec -lavfilter -lavdevice -lswresample -lswscale -lavutil -lz -llzma -lx264 -lx265 -lopus -lfdk-aac -lvpx -lvorbisenc -lvorbis  -ldrm -pthread -lgnutls -lmp3lame -lX11 -lm  -lvdpau -lva -lva-drm -lva-x11 -o ndi-player
+g++ -I../../ffmpeg_build/include -I./NDI_SDK/include -L ../NDI_SDK/lib/x86_64-linux-gnu -L../../ffmpeg_build/lib ndi-player.cpp -lavformat -lndi -lavcodec -lavfilter -lavdevice -lswresample -lswscale -lavutil -lz -llzma -lx264 -lx265 -lopus -lfdk-aac -lvpx -lvorbisenc -lvorbis  -ldrm -pthread -lgnutls -lmp3lame -lX11 -lm  -lvdpau -lva -lva-drm -lva-x11 -lncurses -o ndi-player
 ```
 
 ## Transcoding
