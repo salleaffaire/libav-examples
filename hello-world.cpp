@@ -255,11 +255,10 @@ static int decode_packet(AVPacket *pPacket, AVCodecContext *pCodecContext,
           "Frame %d (type=%c, size=%d bytes, format=%d) pts %d key_frame %d "
           "[DTS %d]",
           pCodecContext->frame_num, av_get_picture_type_char(pFrame->pict_type),
-          pFrame->pkt_size, pFrame->format, pFrame->pts, pFrame->key_frame,
-          pFrame->coded_picture_number);
+          pFrame->pkt_size, pFrame->format, pFrame->pts, pFrame->key_frame);
 
       char frame_filename[1024];
-      snprintf(frame_filename, sizeof(frame_filename), "%s-%d.pgm", "frame",
+      snprintf(frame_filename, sizeof(frame_filename), "%s-%ld.pgm", "frame",
                pCodecContext->frame_num);
       // Check if the frame is a planar YUV 4:2:0, 12bpp
       // That is the format of the provided .mp4 file

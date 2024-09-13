@@ -1,10 +1,29 @@
 # Libav Samples
 
+Built on Ununtu 22.04. 
+
 To build the 2 examples, you must first install FFMPEG or build it frome source. 
 
 Follow the [compilation guide](https://trac.ffmpeg.org/wiki/CompilationGuide).
 
 1- [Get the dependencies](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu#GettheDependencies)
+
+```
+sudo apt-get install nasm
+sudo apt-get install libx264-dev
+sudo apt-get install libvpx-dev
+sudo apt-get install libfdk-aac-dev
+sudo apt-get install libopus-dev
+sudo apt-get install libdav1d-dev
+sudo apt-get install libx265-dev libnuma-dev
+```
+
+1.5 You might need to run this after installing all the needed codecs.
+
+```bash
+sudo apt-get install libunistring-dev
+```
+see, [FFMPEG not building](https://askubuntu.com/questions/1252997/unable-to-compile-ffmpeg-on-ubuntu-20-04)
 
 2- From you home ($HOME) directory, execute the `fetch-build-install.sh` script. For subsequent rebuilds, just run `build-install.sh`.
 
@@ -17,8 +36,16 @@ When built, the artifacts should be in the `ffmpeg_build` folder.
 
 Make sure you properly set the location of `ffmpeg_build`.
 
+```bash
+g++ -I../../ffmpeg_build/include -L../../ffmpeg_build/lib hello-world.cpp -lavformat -lavcodec -lavfilter -lavdevice -lswresample -lswscale -lavutil -lz -llzma -lx264 -lx265 -lopus -lfdk-aac -lvpx -lvorbisenc -lvorbis  -ldrm -pthread -lgnutls -lmp3lame -lX11 -lm  -lvdpau -lva -lva-drm -lva-x11 -o hello-world
 ```
-g++ -I../../ffmpeg_build/include -L../../ffmpeg_build/lib hello_world.cpp -lavcodec -lavformat -lavfilter -lavdevice -lswresample -lswscale -lavutil -lz -lx264 -lx265 -lopus -lfdk-aac -lvpx -lvorbisenc  -lvorbis  -pthread -lgnutls -lmp3lame -lX11 -lm  -lvdpau -lva -lva-drm -lva-x11 -o hello_world
+
+## NDI Player
+
+### Build
+
+```bash
+g++ -I../../ffmpeg_build/include -I./NDI_SDK/include -L ../NDI_SDK/lib/x86_64-linux-gnu -L../../ffmpeg_build/lib ndi-player.cpp -lavformat -lndi -lavcodec -lavfilter -lavdevice -lswresample -lswscale -lavutil -lz -llzma -lx264 -lx265 -lopus -lfdk-aac -lvpx -lvorbisenc -lvorbis  -ldrm -pthread -lgnutls -lmp3lame -lX11 -lm  -lvdpau -lva -lva-drm -lva-x11 -o ndi-player
 ```
 
 ## Transcoding
@@ -27,7 +54,7 @@ g++ -I../../ffmpeg_build/include -L../../ffmpeg_build/lib hello_world.cpp -lavco
 
 Make sure you properly set the location of `ffmpeg_build`.
 
-```
+```bash
 g++ -I../../ffmpeg_build/include -L../../ffmpeg_build/lib video_debugging.cpp transcoding.cpp -lavcodec -lavformat -lavfilter -lavdevice -lswresample -lswscale -lavutil -lz -lx264 -lx265 -lopus -lfdk-aac -lvpx -lvorbisenc  -lvorbis  -pthread -lgnutls -lmp3lame -lX11 -lm  -lvdpau -lva -lva-drm -lva-x11 -o transcoding
 ```
 

@@ -1,2 +1,4 @@
 *.pgm
 *.mp4
+ndi-player
+NDI_SDK/
