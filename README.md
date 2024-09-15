@@ -85,3 +85,12 @@ ffmpeg: This is the FFmpeg command.
 After the encoding process is complete, FFmpeg will display the benchmarking information, including the average time it took to encode a video frame. Look for the line starting with "bench" and find the value associated with "t" (time per frame).
 
 Keep in mind that the actual time taken to encode a frame can vary depending on the video codec, the hardware used, and other encoding parameters. The reported value is an average across all frames during the encoding process.
+
+## Docker
+
+### Build
+
+First, download the NDI SDK from their web site [NDI SDK](https://ndi.video/for-developers/ndi-sdk/).
+
+Unzip it a place it at the top of the project folder under the name `NDI_SDK`.
+

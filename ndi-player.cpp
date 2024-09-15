@@ -16,14 +16,17 @@ extern "C" {
 #include "libavformat/avformat.h"
 }
 
+#include <fcntl.h>  // For file control
 #include <inttypes.h>
-#include <ncurses.h>  // For `kbhit` and `getch` functions
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
+#include <unistd.h>  // For STDIN_FILENO and other POSIX functions
 
 #include <chrono>
+#include <iostream>
 #include <thread>
 
 #include "Processing.NDI.Lib.h"
@@ -48,10 +51,41 @@ static void avframe_to_ndi_video_frame_420_to_UYVY(
     AVFrame *pFrameAV, NDIlib_video_frame_v2_t *pFrameNDI, int frameRateNum,
     int frameRateDen);
 
+// Function to set terminal to non-blocking mode
+void enableNonBlockingInput() {
+  termios t;
+  tcgetattr(STDIN_FILENO, &t);
+  t.c_lflag &= ~ICANON;  // Disable canonical mode
+  t.c_lflag &= ~ECHO;    // Disable echo
+  tcsetattr(STDIN_FILENO, TCSANOW, &t);
+
+  fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);  // Set non-blocking
+}
+
+// Function to restore terminal settings
+void restoreTerminalSettings() {
+  termios t;
+  tcgetattr(STDIN_FILENO, &t);
+  t.c_lflag |= ICANON;  // Enable canonical mode
+  t.c_lflag |= ECHO;    // Enable echo
+  tcsetattr(STDIN_FILENO, TCSANOW, &t);
+}
+
+std::string getEnvVar(std::string const &key) {
+  char *val = getenv(key.c_str());
+  return val == NULL ? std::string("") : std::string(val);
+}
+
 int main(int argc, const char *argv[]) {
+  std::string inputFileName;
   if (argc < 2) {
-    printf("You need to specify a media file.\n");
-    return -1;
+    inputFileName = getEnvVar("NDIPLAYER_INPUT_FILE");
+    if (inputFileName.empty()) {
+      std::cerr << "You need to specify a media file." << std::endl;
+      return -1;
+    }
+  } else {
+    inputFileName = argv[1];
   }
 
   logging("initializing all the containers, codecs and protocols.");
@@ -66,7 +100,7 @@ int main(int argc, const char *argv[]) {
   }
 
   logging("opening the input file (%s) and loading format (container) header",
-          argv[1]);
+          inputFileName.c_str());
   // Open the file and read its header. The codecs are not opened.
   // The function arguments are:
   // AVFormatContext (the component we allocated memory for),
@@ -74,7 +108,8 @@ int main(int argc, const char *argv[]) {
   // AVInputFormat (if you pass NULL it'll do the auto detect)
   // and AVDictionary (which are options to the demuxer)
   // http://ffmpeg.org/doxygen/trunk/group__lavf__decoding.html#ga31d601155e9035d5b0e7efedc894ee49
-  if (avformat_open_input(&pFormatContext, argv[1], NULL, NULL) != 0) {
+  if (avformat_open_input(&pFormatContext, inputFileName.c_str(), NULL, NULL) !=
+      0) {
     logging("ERROR could not open the file");
     return -1;
   }
@@ -222,6 +257,8 @@ int main(int argc, const char *argv[]) {
   }
 
   bool isKeyPressed = false;
+
+  enableNonBlockingInput();
   while (!isKeyPressed) {
     // fill the Packet with data from the Stream
     // https://ffmpeg.org/doxygen/trunk/group__lavf__decoding.html#ga4fdb3084415a82e3810de6ee60e46a61
@@ -232,20 +269,15 @@ int main(int argc, const char *argv[]) {
         response = decode_packet(pPacket, pCodecContext, pFrame, &pNDI_send,
                                  frameRateNum, frameRateDen);
         if (response < 0) break;
+
+        // Check if a key was pressed
+        char ch;
+        if (read(STDIN_FILENO, &ch, 1) > 0) {
+          if (ch == 'q') isKeyPressed = true;
+          break;  // Exit the loop if any key is pressed
+        }
         // stop it, otherwise we'll be saving hundreds of frames
         // if (--how_many_packets_to_process <= 0) break;
-
-        // Check for key press without blocking
-        if (getch() != ERR) {
-          // Capture the key press
-          int keyPressed = getch();
-
-          // Exit the loop if the desired key was pressed (e.g., 'q')
-          if (keyPressed == 'q') {
-            isKeyPressed = true;
-            break;  // Exit the loop immediately
-          }
-        }
       }
       // https://ffmpeg.org/doxygen/trunk/group__lavc__packet.html#ga63d5a489b419bd5d45cfd09091cbcbc2
       av_packet_unref(pPacket);
@@ -254,6 +286,7 @@ int main(int argc, const char *argv[]) {
     // Seek to the beginning of the file
     av_seek_frame(pFormatContext, -1, 0, AVSEEK_FLAG_BACKWARD);
   }
+  restoreTerminalSettings();
 
   logging("releasing all the resources");
 
