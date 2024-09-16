@@ -1,10 +1,20 @@
 # Libav Samples
 
+Here is a collection of tools all based on FFMPEG libav.
+
+- `Hello World` is a program that serves as an example and can be used as a starting point for different projects.
+- `NDI Player` is a tool that plays a video file (mp4, avi, etc.) in a loop and serves the video only track to an NDI output.
+- `Transcoding` is an example of how to use the encoding libraries of libav. 
+
+## Installing the dependencies
+
 ```note
 Built on Ununtu 22.04. 
 ```
 
-To build the 2 examples, you must first install FFMPEG or build it frome source. 
+You basically follow what is in the Dockerfile.
+
+To build the 2 examples, you must first install FFMPEG or build it frome source. I recommend to build from source using the vendored snapshot of FFMPEG.
 
 Follow the [compilation guide](https://trac.ffmpeg.org/wiki/CompilationGuide).
 
@@ -36,6 +46,8 @@ In your home folder create a `ffmpeg_sources` folder and copy `ffmpeg-snapshot.t
 
 When built, the artifacts should be in the `ffmpeg_build` folder.
 
+For the NDI player we'll need the NDI SDK. Download the NDI SDK from their web site [NDI SDK](https://ndi.video/for-developers/ndi-sdk/).
+ 
 ## Hello World
 
 ### Build
@@ -51,7 +63,7 @@ g++ -I../../ffmpeg_build/include -L../../ffmpeg_build/lib hello-world.cpp -lavfo
 ### Build
 
 ```bash
-g++ -I../../ffmpeg_build/include -I./NDI_SDK/include -L ../NDI_SDK/lib/x86_64-linux-gnu -L../../ffmpeg_build/lib ndi-player.cpp -lavformat -lndi -lavcodec -lavfilter -lavdevice -lswresample -lswscale -lavutil -lz -llzma -lx264 -lx265 -lopus -lfdk-aac -lvpx -lvorbisenc -lvorbis  -ldrm -pthread -lgnutls -lmp3lame -lX11 -lm  -lvdpau -lva -lva-drm -lva-x11 -lncurses -o ndi-player
+g++ -I../../ffmpeg_build/include -I./NDI_SDK/include -L ../NDI_SDK/lib/x86_64-linux-gnu -L../../ffmpeg_build/lib ndi-player.cpp -lavformat -lndi -lavcodec -lavfilter -lavdevice -lswresample -lswscale -lavutil -lz -llzma -lx264 -lx265 -lopus -lfdk-aac -lvpx -lvorbisenc -lvorbis -ldrm -pthread -lgnutls -lmp3lame -lX11 -lm  -lvdpau -lva -lva-drm -lva-x11 -o ndi-player
 ```
 
 ## Transcoding
@@ -66,6 +78,10 @@ g++ -I../../ffmpeg_build/include -L../../ffmpeg_build/lib video_debugging.cpp tr
 
 
 ## Benchmarking with FFMPEG
+
+### H.264 encode
+
+First, recompile the FFMPEG library replacing the `libx264.c` file with the one provided in this folder under `x264`.
 
 To get the average time it takes to encode a video frame using FFmpeg, you can use the ffmpeg command along with the -benchmark option. The -benchmark option will print benchmarking information after the encoding process is complete, including the average time taken to encode a frame.
 
@@ -86,9 +102,11 @@ After the encoding process is complete, FFmpeg will display the benchmarking inf
 
 Keep in mind that the actual time taken to encode a frame can vary depending on the video codec, the hardware used, and other encoding parameters. The reported value is an average across all frames during the encoding process.
 
-## Docker
+## Docker Support
 
-### Build
+### NDI Player
+
+#### Build
 
 First, download the NDI SDK from their web site [NDI SDK](https://ndi.video/for-developers/ndi-sdk/).
 

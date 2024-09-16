@@ -11,6 +11,9 @@
  * raw frames. Frame - a decoded raw frame (to be encoded or filtered).
  */
 
+#define DEBUG_PROFILING 0
+#define DEBUG_GENERAL 0
+
 extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
@@ -265,7 +268,9 @@ int main(int argc, const char *argv[]) {
     while ((av_read_frame(pFormatContext, pPacket) >= 0) && (!isKeyPressed)) {
       // if it's the video stream
       if (pPacket->stream_index == video_stream_index) {
+#if DEBUG_GENERAL == 1
         logging("AVPacket->pts %" PRId64, pPacket->pts);
+#endif
         response = decode_packet(pPacket, pCodecContext, pFrame, &pNDI_send,
                                  frameRateNum, frameRateDen);
         if (response < 0) break;
@@ -378,7 +383,10 @@ static int decode_packet(AVPacket *pPacket, AVCodecContext *pCodecContext,
 
       auto frameDuration =
           std::chrono::microseconds(1000000 / (frameRateNum / frameRateDen));
+
+#if DEBUG_PROFILING == 1
       logging("Frame rate: %lds", frameDuration.count());
+#endif
 
       // Get the current time
       // This is the end point before a sleep
@@ -389,13 +397,23 @@ static int decode_packet(AVPacket *pPacket, AVCodecContext *pCodecContext,
           std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
       if (!firstFrame) {
+#if DEBUG_PROFILING == 1
         // Logging the time it took to process the frame
         logging("Time to process frame: %ldus", duration.count());
+#endif
       } else {
         duration = std::chrono::microseconds(0);
       }
 
-      // Wait 33.3667ms
+      if (duration.count() > frameDuration.count()) {
+        logging(
+            "Warning: the frame processing time is longer than a frame "
+            "durarion. Your output frame rate won't follow the source frame "
+            "rate %ldus",
+            duration.count());
+      }
+
+      // Wait for the remaining time
       std::this_thread::sleep_for(
           std::chrono::microseconds(frameDuration - duration));
 
@@ -413,7 +431,10 @@ static int decode_packet(AVPacket *pPacket, AVCodecContext *pCodecContext,
       framePerPacket++;
     }
   }
+
+#if DEBUG_GENERAL == 1
   logging("Frames per packet: %d", framePerPacket);
+#endif
 
   return 0;
 }
@@ -459,6 +480,11 @@ static void avframe_to_ndi_video_frame_420_to_UYVY(
   // Allocate the memory
   pFrameNDI->p_data = (uint8_t *)malloc(pFrameAV->width * pFrameAV->height * 2);
 
+#if DEBUG_PROFILING == 1
+  // Capture the start time of the color conversion
+  auto start = std::chrono::high_resolution_clock::now();
+#endif
+
   // Set the data of the frame
   // For each line
   for (int line = 0; line < pFrameAV->height; line++) {
@@ -481,6 +507,18 @@ static void avframe_to_ndi_video_frame_420_to_UYVY(
       *dataDest++ = *dataSourceY++;
     }
   }
+
+#if DEBUG_PROFILING == 1
+  // Capture the end time of the color conversion
+  auto end = std::chrono::high_resolution_clock::now();
+
+  // Calculate the time it took to convert the color
+  auto duration =
+      std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+  // Logging the time it took to convert the color
+  logging("Time to convert color: %ldus", duration.count());
+#endif
 
   // Set the metadata of the frame
   pFrameNDI->p_metadata = NULL;
